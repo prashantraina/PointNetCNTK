@@ -7,9 +7,20 @@
 
 #include "targetver.h"
 
+#include <algorithm>
+#include <numeric>
 #include <stdio.h>
 #include <tchar.h>
+#include <Windows.h>
+#include <iostream>
+#include <chrono>
+#include <random>
+#include <functional>
+#include <fstream>
+#include <memory>
+#include <unordered_map>
+
+#include <CNTKLibrary.h>
 
 
-
-// TODO: reference additional headers your program requires here
+using namespace std::placeholders;
