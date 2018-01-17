@@ -19,8 +19,17 @@
 #include <fstream>
 #include <memory>
 #include <unordered_map>
+#include <sstream>
+#include <filesystem>
 
 #include <CNTKLibrary.h>
 
+#include <json.hpp>
+
 
 using namespace std::placeholders;
+
+namespace std
+{
+	namespace filesystem = experimental::filesystem;
+}

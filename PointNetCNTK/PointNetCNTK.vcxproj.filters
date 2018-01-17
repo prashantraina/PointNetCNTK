@@ -27,12 +27,18 @@
     <ClInclude Include="cntk_layers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dataset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PointNetCNTK.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dataset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
