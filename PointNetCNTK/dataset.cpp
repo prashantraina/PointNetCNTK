@@ -1,7 +1,16 @@
 #include "stdafx.h"
 #include "dataset.h"
 
-bool ShapeNetCoreDataset::Load(const std::string& rootDir, size_t num_points)
+ShapeNetCoreDataset::ShapeNetCoreDataset(size_t num_points) :
+	num_points(num_points),
+	randEngine(std::random_device{}()),
+	pointsetShape({ num_points, 3 }),
+	pointsetSeqShape(pointsetShape.AppendShape({ 1 }))
+{
+
+}
+
+bool ShapeNetCoreDataset::Load(const std::string& rootDir)
 {
 	std::cout << "Loading dataset..." << std::endl;
 
@@ -39,26 +48,31 @@ bool ShapeNetCoreDataset::Load(const std::string& rootDir, size_t num_points)
 		auto& tuple = splitTuples[i];
 		const auto& splitList = *std::get<0>(tuple);
 		auto& pointsetList = *std::get<1>(tuple);
-		auto& partsList = *std::get<2>(tuple);
+		//auto& partsList = *std::get<2>(tuple);
+
+		size_t count = 0;
 
 		for (const auto& pair : splitList)
 		{
 			if (failed)
-				continue;
+				break;
+
+			if (count++ >= 5)
+				break;
 
 			const std::string& classId = pair.first;
 			const std::string& fileId = pair.second;
 
 			std::filesystem::path ptsFilePath = (rootDirPath / classId / "points" / fileId).concat(".pts");
-			std::filesystem::path segFilePath = (rootDirPath / classId / "points_label" / fileId).concat(".seg");
+			//std::filesystem::path segFilePath = (rootDirPath / classId / "points_label" / fileId).concat(".seg");
 
 			std::vector<std::array<float, 3>> pointset;
-			std::vector<size_t> pointParts;
+			//std::vector<size_t> pointParts;
 
-			if (LoadPointFile(ptsFilePath, pointset) && LoadSegFile(segFilePath, pointParts))
+			if (LoadPointFile(ptsFilePath, pointset) /*&& LoadSegFile(segFilePath, pointParts)*/)
 			{
 				pointsetList.push_back(pointset);
-				partsList.push_back(pointParts);
+				//partsList.push_back(pointParts);
 			}
 			else
 			{
@@ -70,8 +84,6 @@ bool ShapeNetCoreDataset::Load(const std::string& rootDir, size_t num_points)
 	if (failed)
 		return false;
 
-	this->num_points = num_points;
-
 	std::cout << "Finished loading dataset!" << std::endl;
 
 	return true;
@@ -80,6 +92,11 @@ bool ShapeNetCoreDataset::Load(const std::string& rootDir, size_t num_points)
 size_t ShapeNetCoreDataset::GetNumClasses() const
 {
 	return allClassIds.size();
+}
+
+size_t ShapeNetCoreDataset::GetNumTrainingPointsets() const
+{
+	return trainingPointsets.size();
 }
 
 bool ShapeNetCoreDataset::LoadClassNameDict(std::filesystem::path rootDirPath)
@@ -216,4 +233,39 @@ bool ShapeNetCoreDataset::LoadSegFile(std::filesystem::path filePath, std::vecto
 	}
 
 	return true;
+}
+
+CNTK::NDArrayViewPtr ShapeNetCoreDataset::GetTrainingPointset(size_t index)
+{
+	auto originalVec = trainingPointsets[index];
+	std::shuffle(originalVec.begin(), originalVec.end(), randEngine);
+
+	auto ndarr = CNTK::MakeSharedObject<CNTK::NDArrayView>(pointsetSeqShape, originalVec[0].data(), pointsetShape.TotalSize(), CNTK::DeviceDescriptor::CPUDevice());
+
+	return ndarr;
+}
+
+CNTK::NDArrayViewPtr ShapeNetCoreDataset::GetTestingPointset(size_t index)
+{
+	auto originalVec = testingPointsets[index];
+	std::shuffle(originalVec.begin(), originalVec.end(), randEngine);
+
+	auto ndarr = CNTK::MakeSharedObject<CNTK::NDArrayView>(pointsetSeqShape, originalVec.data(), pointsetShape.TotalSize(), CNTK::DeviceDescriptor::CPUDevice());
+
+	return ndarr;
+}
+
+size_t ShapeNetCoreDataset::GetTrainingClass(size_t index) const
+{
+	return trainingClasses[index];
+}
+
+size_t ShapeNetCoreDataset::GetTestingClass(size_t index) const
+{
+	return testingClasses[index];
+}
+
+std::string ShapeNetCoreDataset::GetModelClassName(size_t classIndex)
+{
+	return classNameDict[allClassIds[classIndex]];
 }

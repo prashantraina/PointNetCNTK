@@ -25,9 +25,19 @@ private:
 	std::vector<std::pair<std::string, std::string>> validationSplit;
 	std::vector<std::pair<std::string, std::string>> testingSplit;
 
+	CNTK::NDShape pointsetShape, pointsetSeqShape;
+	std::mt19937 randEngine;
+
 public:
-	bool Load(const std::string& rootDir, size_t num_points = 2500);
+	ShapeNetCoreDataset(size_t num_points = 2500);
+	bool Load(const std::string& rootDir);
 	size_t GetNumClasses() const;
+	size_t GetNumTrainingPointsets() const;
+	CNTK::NDArrayViewPtr GetTrainingPointset(size_t index);
+	CNTK::NDArrayViewPtr GetTestingPointset(size_t index);
+	size_t GetTrainingClass(size_t index) const;
+	size_t GetTestingClass(size_t index) const;
+	std::string GetModelClassName(size_t classIndex);
 
 private:
 	bool LoadClassNameDict(std::filesystem::path rootDirPath);
